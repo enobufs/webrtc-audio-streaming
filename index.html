@@ -1,4 +1,5 @@
 <html>
+
 <head>
     <meta charset="utf-8">
     <title>Audio Streaming with WebRTC</title>
@@ -6,33 +7,51 @@
 </head>
 
 <body>
-
 <div id="container">
-		<h1>Audio Streaming with WebRTC</h1>
-		<h2>What does this do?</h2>
-		<p>
-			This demonstrates a audio transmission using WebRTC between the two browsers.
-			Instead of using micrphones, server side browser reads a MP3 file, trannsfer it
-			to the client using WebRTC, then the client playbacks the audio.
-		</p>
-		<h2>How to run?</h2>
-		<p>
-			Click the links below to open server tab and client tab. By design, the client
-			will become the oferrer (initiator).
-		</p>
-		<p>
-			In the client page, you will see the first "offer" message in the text box. Copy
-			the text to the sever side input box, then hit "OK". You will see "answer" message
-			appears in the text box below. Copy the text then paste it to the client side
-			input box.
-		</p>
-		<p>
-		  Reeapt the above, until it stops showing a new text. On success, you should
-			start hearing a sound played on the client side browser.
-		</p>
-		<h2>Let's get start</h2>
-		<p>Open <a href="server.html" target="_blank">server tab</a></p>
-		<p>Open <a href="client.html" target="_blank">client tab</a></p>
+    <h1>Audio Streaming with WebRTC</h1>
+    <h2>What does this do?</h2>
+    <p>
+      This demonstrates an audio streaming using WebRTC between the two browsers.
+      Instead of using microphones, server side browser reads a MP3 file then
+      streams it out to the client using WebRTC, while the client plays the audio
+      stream in real-time.
+    </p>
+    <pre>
+       +-----+                       
+       | MP3 | (file)
+       +-----+                      
+          |
+          v
+    +-----------+                         +-----------+
+    |  Browser  |   WebRTC (OPUS/RTP)     |  Browser  |
+    |           +------------------------>|           |--> Speaker ))
+    |  (Server) |                         |  (Client) |
+    +-----------+                         +-----------+
+    </pre>
+    <h2>How to run?</h2>
+    <p>
+      Click the links below to open server tab and client tab. By design, the client
+      will become the initiator (generates "offer").
+    </p>
+    <p>
+      In the client page, you will see the first "offer" message in the text box. Copy
+      the text to the sever side input box, then hit "OK". You will see "answer" message
+      appears in the text box below. Copy the text, and paste it into the client side
+      input box.
+    </p>
+    <p>
+      Repeat the above, until it stops showing a new text. On success, you should
+      start hearing a sound played on the client side browser.
+    </p>
+    <h2>Let's get start</h2>
+    <p>Open <a href="server.html" target="_blank">server tab</a></p>
+    <p>Open <a href="client.html" target="_blank">client tab</a></p>
+
+    <h2>Links</h2>
+    <ul>
+      <li><a href="https://github.com/enobufs/webrtc-audio-streaming" target="_blank">Github repo</a></li>
+    </ul>
 </div>
 </body>
+
 </html>
