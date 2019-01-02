@@ -1,0 +1,36 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <base target="_blank">
+    <title>Server</title>
+    <link rel="stylesheet" href="css/main.css"/>
+
+</head>
+
+<body>
+
+<div class="container">
+	<div class="subcontainer">
+		<h1>Server: Creates a stream from MP3 file to a client</h1>
+	</div>
+	<div class="subcontainer">
+		<audio id="audioElm" playsinline autoplay controls muted>
+			<source src="audio/classic.mp3" type="audio/mpeg"/>
+			<p>This browser does not support the audio element.</p>
+		</audio>
+	</div>
+	<div class="subcontainer">
+		<p>Paste the offer from the peer:</p>
+		<textarea id="sdpinElm" cols="100%" onclick="this.select()"></textarea>
+		<button class="block" width="20" onclick="onSDPEntered()">OK</button>
+	</div>
+	<div class="subcontainer">
+		<p>Copy this answer to the peer:</p>
+		<textarea id="sdpoutElm" cols="100%" readonly onclick="this.select()"></textarea>
+	</div>
+</div>
+
+<script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+<script src="js/server.js" async></script>
+</body>
+</html>
