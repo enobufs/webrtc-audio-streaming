@@ -62,3 +62,4 @@ typings/
 
 # other
 *.sw[poe]
+.DS_Store
