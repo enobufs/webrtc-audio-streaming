@@ -73,12 +73,24 @@ function onCreateAnswerSuccess(desc) {
         console.log('server: setLocalDescription failed:', err);
     });
 
-    sdpoutElm.value = btoa(sDesc);
+    //sdpoutElm.value = btoa(sDesc);
 }
 
 function onIceCandidate(event) {
-    console.log(`server: ICE candidate: ${event.candidate}`);
-    candidates.push(event.candidate);
+    if (event.type !== 'icecandidate') {
+        console.log(`server: unexpected event type: : ${event.type}`);
+    }
+    if (event.candidate) {
+        console.log(`server: ICE candidate: ${event.candidate}`);
+        candidates.push(event.candidate);
+    } else {
+        console.log('server: end of ICE candidate:', event);
+        const desc = sc.currentLocalDescription;
+
+        const sDesc = JSON.stringify(desc);
+        console.log('server: current local description:', sDesc);
+        sdpoutElm.value = btoa(sDesc);
+    }
 }
 
 function onIceStateChange(pc, event) {
@@ -93,35 +105,40 @@ function onSDPEntered() {
     // (Chrome won't auto-play without a human interaction)
     audioElm.play();
 
-    const sdp = atob(sdpinElm.value);
-    const desc = JSON.parse(sdp);
+    const entered = sdpinElm.value;
+
     sdpinElm.value = "";
     sdpoutElm.value = "";
-    console.log("Entered SDP:", desc);
-    if (Array.isArray(desc)) {
-        desc.forEach((cand) => {
-            sc.addIceCandidate(cand).then(() => {
-                console.log('server: addIceCandidate success');
-            }, (err) => {
-                console.log('server: addIceCandidate failed:', err);
-            });
-        });
 
+    if (entered.length > 0) {
+        const sdp = atob(entered);
+        console.log("Entered SDP:", sdp);
+        const desc = JSON.parse(sdp);
+        if (Array.isArray(desc)) {
+            desc.forEach((cand) => {
+                sc.addIceCandidate(cand).then(() => {
+                    console.log('server: addIceCandidate success');
+                }, (err) => {
+                    console.log('server: addIceCandidate failed:', err);
+                });
+            });
+        } else {
+            if (desc.hasOwnProperty("type")) {
+                if (desc.type === "offer") {
+                    onSDPReceived(desc);
+                } else if (desc.type === "answer" || desc.type === "pranswer") {
+                    console.log("Unexpected SDP type: %s", desc.type);
+                } else {
+                    console.log("Unsupported SDP type: %s", desc.type);
+                }
+            } else {
+                console.log("Unknown SDP entered: %s", desc);
+            }
+        }
+    } else {
         if (candidates.length > 0) {
             sdpoutElm.value = btoa(JSON.stringify(candidates));
             candidates = [];
-        }
-    } else {
-        if (desc.hasOwnProperty("type")) {
-            if (desc.type === "offer") {
-                onSDPReceived(desc);
-            } else if (desc.type === "answer" || desc.type === "pranswer") {
-                console.log("Unexpected SDP type: %s", desc.type);
-            } else {
-                console.log("Unsupported SDP type: %s", desc.type);
-            }
-        } else {
-            console.log("Unknown SDP entered: %s", desc);
         }
     }
 }
