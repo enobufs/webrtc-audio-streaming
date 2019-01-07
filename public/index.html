@@ -12,8 +12,8 @@
     <h2>What does this do?</h2>
     <p>
       This demonstrates an audio streaming using WebRTC between the two browsers.
-      Instead of using microphones, server side browser reads a MP3 file then
-      streams it out to the client using WebRTC, while the client plays the audio
+      Instead of using microphones, sender side browser reads a MP3 file then
+      streams it out to the receiver using WebRTC, while the receiver plays the audio
       stream in real-time.
     </p>
     <pre>
@@ -25,27 +25,27 @@
     +-----------+                         +-----------+
     |  Browser  |   WebRTC (OPUS/RTP)     |  Browser  |
     |           +------------------------>|           |--> Speaker ))
-    |  (Server) |                         |  (Client) |
+    |  (Sender) |                         | (Receiver)|
     +-----------+                         +-----------+
     </pre>
     <h2>How to run?</h2>
     <p>
-      Click the links below to open server tab and client tab. By design, the client
+      Click the links below to open sender tab and receiver tab. By design, the receiver
       will become the initiator (generates "offer").
     </p>
     <p>
-      In the client page, you will see the first "offer" message in the text box. Copy
+      In the receiver page, you will see the first "offer" message in the text box. Copy
       the text to the sever side input box, then hit "OK". You will see "answer" message
-      appears in the text box below. Copy the text, and paste it into the client side
+      appears in the text box below. Copy the text, and paste it into the receiver side
       input box.
     </p>
     <p>
       Repeat the above, until it stops showing a new text. On success, you should
-      start hearing a sound played on the client side browser.
+      start hearing a sound played on the receiver side browser.
     </p>
     <h2>Let's get started</h2>
-    <p>Open <a href="server.html" target="_blank">server tab</a></p>
-    <p>Open <a href="client.html" target="_blank">client tab</a></p>
+    <p>Open <a href="sender.html" target="_blank">sender tab</a></p>
+    <p>Open <a href="receiver.html" target="_blank">receiver tab</a></p>
 
     <h2>Links</h2>
     <ul>

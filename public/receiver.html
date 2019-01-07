@@ -1,0 +1,41 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <base target="_blank">
+    <title>Receiver</title>
+    <link rel="stylesheet" href="css/main.css"/>
+</head>
+
+<body onload="onStart()">
+
+<div class="container">
+    <div class="subcontainer">
+        <h1>Audio Stream Receiver</h1>
+    </div>
+    <div class="subcontainer">
+			  <audio id="audioElm" autoplay controls>
+			  </audio>
+				<div class="subcontainer">
+					<div class="h-container">
+						<div class="it-key">Signaling status</div>
+						<div class="it-val" id="statusElm">Offline</div>
+					</div>
+					<div class="h-container">
+						<div class="it-key">Connection status</div>
+						<div class="it-val" id="connstElm">offline</div>
+					</div>
+				</div>
+        <button class="block" id="buActionElm" onclick="onAction()">Connect</button>
+    </div>
+    <div class="subcontainer">
+        <textarea id="sdpoutElm" cols="100%" readonly onclick="this.select()"></textarea>
+    </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+<script src="js/receiver.js"></script>
+<script src="js/signaling.js"></script>
+<script src="js/endpoint.js"></script>
+</body>
+</html>

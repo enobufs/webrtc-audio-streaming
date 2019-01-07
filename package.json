@@ -1,0 +1,15 @@
+{
+  "name": "webrtc-audio-streaming",
+  "version": "0.0.1",
+  "description": "WebRTC audio streaming demo",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "author": "enobufs",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.16.4",
+    "socket.io": "^2.2.0"
+  }
+}
