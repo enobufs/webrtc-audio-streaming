@@ -17,11 +17,11 @@
       stream in real-time.
     </p>
     <pre>
-       +-----+                       
-       | MP3 | (file)
-       +-----+                      
-          |
-          v
+    +-----+          Signaling Server
+    | MP3 |  +----------> (^_^) <------------+
+    +-----+  |             YOU               |
+       |     |         by cut&paste          |
+       v     |                               |
     +-----------+                         +-----------+
     |  Browser  |   WebRTC (OPUS/RTP)     |  Browser  |
     |           +------------------------>|           |--> Speaker ))
@@ -46,7 +46,6 @@
     <h2>Let's get started</h2>
     <p>Open <a href="server.html" target="_blank">server tab</a></p>
     <p>Open <a href="client.html" target="_blank">client tab</a></p>
-
     <h2>Links</h2>
     <ul>
       <li><a href="https://github.com/enobufs/webrtc-audio-streaming" target="_blank">Github repo</a></li>
