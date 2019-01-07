@@ -29,4 +29,4 @@ npm start
 HTTP server with signaling service (socket.io) should be running at URL: `http://localhost:8080`.
 Open your browser at the URL, then follow the further instruction.
 
-For a quick demo, go to [github-page](https://enobufs.github.io/webrtc-audio-streaming/).
+For a quick demo (manual cut&paste signaling), go to [github-page](https://enobufs.github.io/webrtc-audio-streaming/).
