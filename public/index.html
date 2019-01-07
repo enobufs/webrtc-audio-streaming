@@ -12,16 +12,16 @@
     <h2>What does this do?</h2>
     <p>
       This demonstrates an audio streaming using WebRTC between the two browsers.
-      Instead of using microphones, sender side browser reads a MP3 file then
+      Instead of using microphones, sender side browser reads a MP3 file, then
       streams it out to the receiver using WebRTC, while the receiver plays the audio
       stream in real-time.
     </p>
     <pre>
-       +-----+                       
-       | MP3 | (file)
-       +-----+                      
-          |
-          v
+    +-----+           +-----------+
+    | MP3 |  +------->| Signaling |<---------+
+    +-----+  |        |(socket.io)|          |
+       |     |        +-----------+          |
+       v     v                               v
     +-----------+                         +-----------+
     |  Browser  |   WebRTC (OPUS/RTP)     |  Browser  |
     |           +------------------------>|           |--> Speaker ))
@@ -34,19 +34,15 @@
       will become the initiator (generates "offer").
     </p>
     <p>
-      In the receiver page, you will see the first "offer" message in the text box. Copy
-      the text to the sever side input box, then hit "OK". You will see "answer" message
-      appears in the text box below. Copy the text, and paste it into the receiver side
-      input box.
+		  WebRTC connection will be initiated by clicking "Connect" button on the receiver tab.
+			If the audio on the sender side tab is not (auto-)playing, click the play button.
     </p>
     <p>
-      Repeat the above, until it stops showing a new text. On success, you should
-      start hearing a sound played on the receiver side browser.
+			On success, you should start hearing a sound played on the receiver side browser.
     </p>
     <h2>Let's get started</h2>
     <p>Open <a href="sender.html" target="_blank">sender tab</a></p>
     <p>Open <a href="receiver.html" target="_blank">receiver tab</a></p>
-
     <h2>Links</h2>
     <ul>
       <li><a href="https://github.com/enobufs/webrtc-audio-streaming" target="_blank">Github repo</a></li>
