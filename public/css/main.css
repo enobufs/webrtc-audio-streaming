@@ -10,9 +10,23 @@
   margin: 10;
 }
 
+.h-container {
+  display: flex;
+  flex-direction: row;
+}
+
+.it-key {
+  display: flex;
+  width: 20%;
+}
+
+.it-val {
+  display: flex;
+}
+
 .block {
   display: block;
-  width: 80;
+  width: 200;
   border: none;
   background-color: #4CAF50;
   color: white;
@@ -22,3 +36,9 @@
   text-align: center;
   border-radius: 8px;
 }
+.block:disabled {
+  background-color: #cccccc;
+  color: #666666;
+}
+
+
