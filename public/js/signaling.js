@@ -37,16 +37,7 @@ class Signaling {
     }
 
     connect() {
-        if (this._socket) {
-            return Promise.reject(new Error("already has socket"));
-        }
-        this._setState(SigState.Connecting);
-
-        // Connect to the signaling server
-        console.log('creating socket...');
-        this._socket = io.connect();
-
-        this._socket.on('ack', (ev) => {
+        const onAck = (ev) => {
             console.log('ack received');
             console.dir(ev);
             const ack = this._msgs[ev.msgId];
@@ -66,7 +57,21 @@ class Signaling {
                 return;
             }
             promise[0](ev);
+        };
+
+        if (this._socket) {
+            return Promise.reject(new Error("already has socket"));
+        }
+        this._setState(SigState.Connecting);
+
+        // Connect to the signaling server
+        console.log('creating socket...');
+        this._socket = io.connect({
+            transports: ['websocket']
         });
+
+        this._socket.on('syn-ack', onAck);
+        this._socket.on('sig-ack', onAck);
 
         this._socket.on('pub', (ev) => {
             void(ev);
@@ -86,7 +91,7 @@ class Signaling {
             }
 
             console.log("emiting ack");
-            this._socket.emit('ack', {
+            this._socket.emit('sig-ack', {
                 success: true,
                 to: ev.from,
                 msgId: ev.msgid

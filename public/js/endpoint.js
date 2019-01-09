@@ -7,6 +7,7 @@ const audioElm = document.getElementById('audioElm');
 const buActionElm = document.getElementById("buActionElm");
 
 let audioSource; // master only
+let trickle = false;
 
 function setUpStream() {
     return new Promise((resolve, reject) => {
@@ -108,6 +109,7 @@ class Endpoint {
             audioSource.getTracks().forEach((track) => this._pc.addTrack(track, audioSource));
             console.log('added local stream to pc');
 
+            console.log("remote description:", desc);
             this._pc.setRemoteDescription(desc, () => {
                 console.log(`${myRole}: setRemoteDescription complete`);
             }, (err) => {
@@ -138,15 +140,19 @@ class Endpoint {
             console.log('offerer: setLocalDescription failed:', err);
         });
 
-        // send SDP
-        console.log("sending offer to %s", senderId);
-        sig.send('sig', {
-            type: 'description',
-            to: senderId,
-            body: desc
-        }).then(() => {
-            console.log("offer acked!");
-        });
+        if (trickle) {
+            // send offer
+            console.log("sending offer to %s", senderId);
+            sig.send('sig', {
+                type: 'description',
+                to: senderId,
+                body: desc
+            }).then(() => {
+                console.log("offer acked!");
+            });
+        } else {
+            console.log("defer sending offer to %s", senderId);
+        }
     }
 
     _onCreateAnswerSuccess(desc) {
@@ -159,14 +165,19 @@ class Endpoint {
             console.log('setLocalDescription failed:', err);
         });
 
-        console.log("sending answer to %s", this._peerId);
-        sig.send('sig', {
-            type: 'description',
-            to: this._peerId,
-            body: desc
-        }).then(() => {
-            console.log("offer acked!");
-        });
+        if (trickle) {
+            // send answer
+            console.log("sending answer to %s", this._peerId);
+            sig.send('sig', {
+                type: 'description',
+                to: this._peerId,
+                body: desc
+            }).then(() => {
+                console.log("offer acked!");
+            });
+        } else {
+            console.log("defer sending answer to %s", this._peerId);
+        }
     }
 
     _onTrack(event) {
@@ -177,13 +188,40 @@ class Endpoint {
     }
 
     _onIceCandidate(event) {
-        console.log('sending ICE candidate:', event.candidate);
+        if (trickle) {
+            if (event.candidate) {
+                console.log('sending ICE candidate:', event.candidate);
 
-        sig.send('sig', {
-            type: 'candidate',
-            to: isSender ? this._peerId : senderId,
-            body: event.candidate
-        });
+                sig.send('sig', {
+                    type: 'candidate',
+                    to: isSender ? this._peerId : senderId,
+                    body: event.candidate
+                });
+            } else {
+                console.log('end of ICE candidate');
+            }
+        } else {
+            if (event.candidate) {
+                console.log('collecting ICE candidate:', event.candidate);
+
+                this._candidates.push(event.candidate);
+            } else {
+                console.log('end of ICE candidate');
+
+                const desc = this._pc.localDescription;
+
+                // send offer or answer now.
+                const to = isSender ? this._peerId : senderId;
+                console.log("sending offer to %s", to);
+                sig.send('sig', {
+                    type: 'description',
+                    to: to,
+                    body: desc
+                }).then(() => {
+                    console.log("offer acked!");
+                });
+            }
+        }
     }
 
     _sendCandidates() {
