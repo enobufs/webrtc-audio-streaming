@@ -33,7 +33,7 @@ npm start
 ```
 
 ### Browser to browser
-HTTP server with signaling service (socket.io) should be running at URL: `http://localhost:8080`.
+HTTP server with signaling service (socket.io) should be running at URL: `http://0.0.0.0:8080`.
 Open your browser at the URL, then follow the further instruction.
 
 ### Browser to pion/webrtc
