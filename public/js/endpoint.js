@@ -7,7 +7,7 @@ const audioElm = document.getElementById('audioElm');
 const buActionElm = document.getElementById("buActionElm");
 
 let audioSource; // master only
-let trickle = false;
+let trickle = true;
 
 function setUpStream() {
     return new Promise((resolve, reject) => {
