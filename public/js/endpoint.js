@@ -26,7 +26,9 @@ function setUpStream() {
 function _maybeCreateStream(resolve, reject) {
     if (audioSource) {
         resolve();
+        return;
     }
+
     if (audioElm.captureStream) {
         audioSource = audioElm.captureStream();
         console.log('Captured stream from audioElm with captureStream', audioSource);
