@@ -42,7 +42,7 @@ io.on('connection', (socket) => {
         console.log('[%s] syn received:', socket.id, ev);
         const c = clients[socket.id];
         if (!c) {
-            socket.emit('ack', {
+            socket.emit('syn-ack', {
                 success: false,
                 reason: 'not registered',
                 msgId: ev.msgId
@@ -59,8 +59,11 @@ io.on('connection', (socket) => {
                 }
             }
             senderId = socket.id;
+        } else {
+            console.log("syn received from a receiver");
         }
-        socket.emit('ack', {
+        console.log("sending syn-ack: senderId:%s", senderId);
+        socket.emit('syn-ack', {
             success: true,
             senderId: senderId,
             msgId: ev.msgId
@@ -72,7 +75,7 @@ io.on('connection', (socket) => {
         console.log('[%s] sig received:', socket.id, ev);
         const me = clients[socket.id];
         if (!me) {
-            socket.emit('ack', {
+            socket.emit('sig-ack', {
                 success: false,
                 reason: "not sync'd",
                 msgId: ev.msgId
@@ -80,7 +83,7 @@ io.on('connection', (socket) => {
             return;
         }
         if (!ev.to) {
-            socket.emit('ack', {
+            socket.emit('sig-ack', {
                 success: false,
                 reason: '"to" field is missing',
                 msgId: ev.msgId
@@ -90,7 +93,7 @@ io.on('connection', (socket) => {
 
         const peer = clients[ev.to];
         if (!peer) {
-            socket.emit('ack', {
+            socket.emit('sig-ack', {
                 success: false,
                 reason: 'peer not found',
                 msgId: ev.msgId
@@ -98,6 +101,7 @@ io.on('connection', (socket) => {
             return;
         }
 
+        // Add `from` field, then forward to the destination.
         ev.from = socket.id;
         peer.socket.emit('sig', ev);
     });

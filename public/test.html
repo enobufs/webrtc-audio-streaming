@@ -1,0 +1,121 @@
+<!DOCTYPE HTML>
+<!-- script src="/socket.io/socket.io.js"></script -->
+
+<html>
+   <head>
+      
+
+      <script type = "text/javascript">
+                const MessageType = {
+                    Open: 0,
+                    Close: 1,
+                    Ping: 2,
+                    Pong: 3,
+                    Message: 4,
+                    EmptyMessage: 40,
+                    CommonMessage: 42,
+                    Ack: 43,
+                };
+
+                function parseData(data) {
+                    const re = /^([0-9]*)(.*)$/;
+                    const match = re.exec(data);
+                    return { type: +match[1], body: match[2].length > 0 ? JSON.parse(match[2]) : '' }
+
+                }
+				function WebSocketTest() {
+					if ("WebSocket" in window) {
+						console.log("WebSocket is supported by your Browser!");
+                        let msgId = 0;
+                        let pingInterval;
+                        let pingTimeout;
+                        let pingTimer;
+                        let pongTimer;
+                        let ws;
+
+                        function startPingTimer() {
+                            pingTimer = setInterval(() => {
+                                ws.send("2");
+                                if (!pongTimer) {
+                                    pongTimer = setTimeout(() => {
+                                        ws.close();
+                                    }, pingTimeout);
+                                }
+                            }, Math.floor(pingInterval / 2));
+                        }
+
+						// Let us open a web socket
+						ws = new WebSocket("ws://localhost:8080/socket.io/?EIO=3&transport=websocket");
+
+						ws.onopen = function(evt) {
+							console.log("onopen:", evt);
+						};
+
+						ws.onmessage = function (evt) { 
+							console.log("message received:", evt.data);
+							const msg = parseData(evt.data);
+                            console.log("msg:", msg);
+
+                            if (msg.type === MessageType.Open) {
+                                console.log("type 0 -", msg.body);  // socket.io - 'connection'
+                                pingInterval = msg.body.pingInterval;
+                                pingTimeout = msg.body.pingTimeout;
+                                startPingTimer();
+                            
+                            } else if (msg.type === MessageType.CommonMessage) {           // socket.io - 'message'
+                                if (msg.body[0] === 'ack') {
+                                    if (msgId === 0) {
+                                        console.log("sending a app message...");
+                                        const res = "42" + JSON.stringify(["syn", {isServer: true, msgId:++msgId}])
+                                        console.log("res:", res);
+                                        ws.send(res);
+                                    } else if (msgId === 1) {
+                                        console.log("sending a ping...");
+                                        ws.send("2");
+                                    }
+                                }
+                            } else if (msg.type === MessageType.EmptyMessage) {
+                                console.log("type Empty -", msg.body);
+                            } else if (msg.type === MessageType.Close) {
+                                console.log("type Close -", msg.body);
+                                if (pingTimer) {
+                                    clearInterval(pingTimer);
+                                    pingTimer = null;
+                                }
+                                if (pongTimer) {
+                                    clearInterval(pongTimer);
+                                    pongTimer = null;
+                                }
+                            } else if (msg.type === MessageType.Ping) {
+                                console.log("type Ping -", msg.body);
+                            } else if (msg.type === MessageType.Pong) {
+                                console.log("type Pong -", msg.body);
+                                clearTimeout(pongTimer);
+                            } else if (msg.type === MessageType.Message) {
+                                console.log("type Message -", msg.body);
+                            } else if (msg.type === MessageType.Ack) {
+                                console.log("type Ack -", msg.body);
+                            } else {
+                                console.log("type %d -", msg.type, msg.body); // socket.io - ?
+                            }
+						};
+
+						ws.onclose = function() { 
+							console.log("Connection is closed..."); 
+						};
+					} else {
+						// The browser doesn't support WebSocket
+						console.log("WebSocket NOT supported by your Browser!");
+					}
+				}
+      </script>
+		
+   </head>
+   
+   <body>
+      <div id = "sse">
+         <a href = "javascript:WebSocketTest()">Run WebSocket</a>
+      </div>
+      
+   </body>
+</html>
