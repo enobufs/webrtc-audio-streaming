@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/binary"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	//"time"
@@ -25,6 +26,10 @@ func toByteArray(buf []int16, bytes []byte) (int, error) {
 }
 
 func main() {
+	// Flags
+	useStun := flag.Bool("use-stun", false, "A boolean flag whether to use STUN server.")
+	flag.Parse()
+
 	// Logger setup
 	log.SetPrefix("LOG: ")
 	log.SetFlags(log.Ldate | log.Lmicroseconds)
@@ -36,7 +41,7 @@ func main() {
 	chDone := make(chan bool)
 
 	// Set up signaling
-	sig := New("ws://localhost:8080/socket.io/?EIO=3&transport=websocket", "Server", false)
+	sig := New("ws://0.0.0.0:8080/socket.io/?EIO=3&transport=websocket", "Server", false)
 	sig.SetOnConnected(func(err error) {
 		if err != nil {
 			log.Fatal("sig: connection failed:", err)
@@ -83,7 +88,7 @@ func main() {
 		select {
 		case <-chReady:
 			// Setup Pion-WebRTC
-			pion = NewPion()
+			pion = NewPion(*useStun)
 			offer, err := pion.CreateOffer()
 			util.Check(err)
 

@@ -212,7 +212,8 @@ class Endpoint {
 
                 // send offer or answer now.
                 const to = isSender ? this._peerId : senderId;
-                console.log("sending offer to %s", to);
+                const typeName = isSender ? "anser" : "offer";
+                console.log("sending %s to %s", typeName, to);
                 sig.send('sig', {
                     type: 'description',
                     to: to,
@@ -272,6 +273,8 @@ class Endpoint {
     }
 
     onCandidateReceived(candidate) {
+        console.log('addIceCandidate:');
+        console.dir(candidate);
         this._pc.addIceCandidate(candidate).then(() => {
             console.log('addIceCandidate success');
         }, (err) => {

@@ -6,23 +6,19 @@ import (
 	"fmt"
 	"log"
 
-	//"github.com/gorilla/websocket"
 	"github.com/hajimehoshi/oto"
 	"github.com/pions/webrtc"
 	"github.com/pions/webrtc/examples/util"
 	"github.com/pions/webrtc/pkg/ice"
 	//"github.com/pions/webrtc/pkg/rtcp"
+	"github.com/pions/webrtc/pkg/rtp/codecs"
 
 	"gopkg.in/hraban/opus.v2"
 )
 
-/* RemoteCandidate example (the one sent by Chrome):
-{
-	"candidate":"candidate:2186074647 1 udp 2113937151 192.168.86.206 49800 typ host generation 0 ufrag 4WgR network-cost 999","sdpMid":"audio",
-	"sdpMLineIndex":0,
-	"usernameFragment":"4WgR"
-}
-*/
+const (
+	stunServer = "stun:stun.l.google.com:19302"
+)
 
 // RemoteCandidate ...
 type RemoteCandidate struct {
@@ -37,20 +33,33 @@ type Pion struct {
 }
 
 // NewPion instantiates a new Pion
-func NewPion() *Pion {
+func NewPion(useStun bool) *Pion {
 	// Setup the codecs you want to use.
-	// We'll use the default ones but you can also define your own
-	//webrtc.RegisterDefaultCodecs()
-	opusCodec := webrtc.NewRTCRtpOpusCodec(webrtc.DefaultPayloadTypeOpus, 48000, 2)
+	opusCodec := webrtc.NewRTCRtpCodec(
+		webrtc.RTCRtpCodecTypeAudio,
+		"opus",
+		48000,
+		2,
+		"minptime=10;useinbandfec=1;stereo=1",
+		webrtc.DefaultPayloadTypeOpus,
+		&codecs.OpusPayloader{})
+
 	webrtc.RegisterCodec(opusCodec)
+
+	iceServers := []webrtc.RTCIceServer{}
+	if useStun {
+		log.Printf("Use STUN server at %s", stunServer)
+		iceServer := webrtc.RTCIceServer{
+			URLs: []string{stunServer},
+		}
+		iceServers = append(iceServers, iceServer)
+	} else {
+		log.Println("No STUN server")
+	}
 
 	// Prepare the configuration
 	config := webrtc.RTCConfiguration{
-		IceServers: []webrtc.RTCIceServer{
-			{
-				URLs: []string{"stun:stun.l.google.com:19302"},
-			},
-		},
+		IceServers: iceServers,
 	}
 
 	log.Println("Create PeerConnection")
