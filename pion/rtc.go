@@ -7,11 +7,8 @@ import (
 	"log"
 
 	"github.com/hajimehoshi/oto"
-	"github.com/pions/webrtc"
-	"github.com/pions/webrtc/examples/util"
-	"github.com/pions/webrtc/pkg/ice"
-	//"github.com/pions/webrtc/pkg/rtcp"
-	"github.com/pions/webrtc/pkg/rtp/codecs"
+	"github.com/pion/rtp/codecs"
+	"github.com/pion/webrtc/v2"
 
 	"gopkg.in/hraban/opus.v2"
 )
@@ -20,23 +17,16 @@ const (
 	stunServer = "stun:stun.l.google.com:19302"
 )
 
-// RemoteCandidate ...
-type RemoteCandidate struct {
-	Candidate        string `json:"candidate"`
-	SdpMLineIndex    int    `json:"sdpMLineIndex"`
-	UsernameFragment string `json:"usernameFragment"`
-}
-
 // Pion ...
 type Pion struct {
-	pc *webrtc.RTCPeerConnection
+	pc *webrtc.PeerConnection
 }
 
 // NewPion instantiates a new Pion
 func NewPion(useStun bool) *Pion {
 	// Setup the codecs you want to use.
-	opusCodec := webrtc.NewRTCRtpCodec(
-		webrtc.RTCRtpCodecTypeAudio,
+	opusCodec := webrtc.NewRTPCodec(
+		webrtc.RTPCodecTypeAudio,
 		"opus",
 		48000,
 		2,
@@ -44,12 +34,14 @@ func NewPion(useStun bool) *Pion {
 		webrtc.DefaultPayloadTypeOpus,
 		&codecs.OpusPayloader{})
 
-	webrtc.RegisterCodec(opusCodec)
+	mediaEngine := webrtc.MediaEngine{}
+	mediaEngine.RegisterCodec(opusCodec)
+	api := webrtc.NewAPI(webrtc.WithMediaEngine(mediaEngine))
 
-	iceServers := []webrtc.RTCIceServer{}
+	iceServers := []webrtc.ICEServer{}
 	if useStun {
 		log.Printf("Use STUN server at %s", stunServer)
-		iceServer := webrtc.RTCIceServer{
+		iceServer := webrtc.ICEServer{
 			URLs: []string{stunServer},
 		}
 		iceServers = append(iceServers, iceServer)
@@ -58,25 +50,25 @@ func NewPion(useStun bool) *Pion {
 	}
 
 	// Prepare the configuration
-	config := webrtc.RTCConfiguration{
-		IceServers: iceServers,
+	config := webrtc.Configuration{
+		ICEServers: iceServers,
 	}
 
 	log.Println("Create PeerConnection")
-	// Create a new RTCPeerConnection
-	pc, err := webrtc.New(config)
-	util.Check(err)
+	// Create a new PeerConnection
+	pc, err := api.NewPeerConnection(config)
+	checkError(err)
 
 	// Set a handler for when a new remote track starts, this handler creates a gstreamer pipeline
 	// for the given codec
-	pc.OnTrack(func(track *webrtc.RTCTrack) {
-		codec := track.Codec
+	pc.OnTrack(func(track *webrtc.Track, rtpReceiver *webrtc.RTPReceiver) {
+		codec := track.Codec()
 		fmt.Printf("Track PayloadType: %d\n", track.PayloadType)
 		fmt.Printf("Codec Name       : %s\n", codec.Name)
 		fmt.Printf("Codec MimeType   : %v\n", codec.MimeType)
 		fmt.Printf("Codec ClockRate  : %v\n", codec.ClockRate)
 		fmt.Printf("Codec Channels   : %v\n", codec.Channels)
-		fmt.Printf("Codec SdpFmtpLine: %v\n", codec.SdpFmtpLine)
+		fmt.Printf("Codec SDPFmtpLine: %v\n", codec.SDPFmtpLine)
 
 		sampleRate := int(codec.ClockRate)
 		nChannels := int(codec.Channels) // 1:mono; 2:stereo
@@ -105,8 +97,8 @@ func NewPion(useStun bool) *Pion {
 		fmt.Printf("pcm   size : %d\n", len(pcm))
 
 		for {
-			p := <-track.Packets
-			//nPkts++
+			p, err := track.ReadRTP()
+			checkError(err)
 
 			payloadSize := len(p.Payload)
 
@@ -171,12 +163,12 @@ func NewPion(useStun bool) *Pion {
 
 	// Set the handler for ICE connection state
 	// This will notify you when the peer has connected/disconnected
-	pc.OnICEConnectionStateChange(func(connectionState ice.ConnectionState) {
+	pc.OnICEConnectionStateChange(func(connectionState webrtc.ICEConnectionState) {
 		log.Printf("Connection State has changed %s \n", connectionState.String())
 	})
 	// OnSignalingStateChange sets an event handler which is invoked when the
 	// peer connection's signaling state changes
-	pc.OnSignalingStateChange(func(sigState webrtc.RTCSignalingState) {
+	pc.OnSignalingStateChange(func(sigState webrtc.SignalingState) {
 		log.Printf("Signaling State has changed %s \n", sigState.String())
 	})
 
@@ -184,19 +176,28 @@ func NewPion(useStun bool) *Pion {
 }
 
 // CreateOffer creates an offer.
-func (p *Pion) CreateOffer() (interface{}, error) {
-	return p.pc.CreateOffer(nil)
+func (p *Pion) CreateOffer() (webrtc.SessionDescription, error) {
+	desc, err := p.pc.CreateOffer(nil)
+	if err != nil {
+		return desc, err
+	}
+
+	log.Printf("rtc: local SDP: %s\n", desc.SDP)
+
+	if err = p.pc.SetLocalDescription(desc); err != nil {
+		return desc, err
+	}
+	return desc, nil
 }
 
 // SetRemoteDescription ....
-func (p *Pion) SetRemoteDescription(desc webrtc.RTCSessionDescription) error {
+func (p *Pion) SetRemoteDescription(desc webrtc.SessionDescription) error {
+	log.Printf("rtc: remote SDP: %s\n", desc.SDP)
 	return p.pc.SetRemoteDescription(desc)
 }
 
-// AddIceCandidate ....
-// Pion's method takes only the `candidate` field which is not ideal...
-// This should be fixed in pion in the future.
-func (p *Pion) AddIceCandidate(candidate RemoteCandidate) error {
+// AddICECandidate ....
+func (p *Pion) AddICECandidate(candidate webrtc.ICECandidateInit) error {
 	log.Printf("rtc: remote candidate: %s\n", candidate.Candidate)
-	return p.pc.AddIceCandidate(candidate.Candidate)
+	return p.pc.AddICECandidate(candidate)
 }

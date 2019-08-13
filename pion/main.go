@@ -8,9 +8,14 @@ import (
 	"log"
 	//"time"
 
-	"github.com/pions/webrtc"
-	"github.com/pions/webrtc/examples/util"
+	"github.com/pion/webrtc/v2"
 )
+
+func checkError(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
 
 func toByteArray(buf []int16, bytes []byte) (int, error) {
 	if len(buf)*2 > len(bytes) {
@@ -56,11 +61,11 @@ func main() {
 			if err != nil {
 				log.Fatal("sig: failed to marshal signal body:", err)
 			}
-			answer := webrtc.RTCSessionDescription{}
+			answer := webrtc.SessionDescription{}
 			err = json.Unmarshal(bytes, &answer)
-			util.Check(err)
+			checkError(err)
 			err = pion.SetRemoteDescription(answer)
-			util.Check(err)
+			checkError(err)
 			return
 		}
 
@@ -70,11 +75,11 @@ func main() {
 			if err != nil {
 				log.Fatal("sig: failed to marshal signal body:", err)
 			}
-			candi := RemoteCandidate{}
+			candi := webrtc.ICECandidateInit{}
 			err = json.Unmarshal(bytes, &candi)
-			util.Check(err)
-			err = pion.AddIceCandidate(candi)
-			util.Check(err)
+			checkError(err)
+			err = pion.AddICECandidate(candi)
+			checkError(err)
 			return
 		}
 	})
@@ -90,7 +95,7 @@ func main() {
 			// Setup Pion-WebRTC
 			pion = NewPion(*useStun)
 			offer, err := pion.CreateOffer()
-			util.Check(err)
+			checkError(err)
 
 			sm := &Signal{
 				Type: "description",
