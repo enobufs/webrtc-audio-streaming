@@ -59,6 +59,11 @@ func NewPion(useStun bool) *Pion {
 	pc, err := api.NewPeerConnection(config)
 	checkError(err)
 
+	// Allow us to receive 1 audio track
+	if _, err = pc.AddTransceiver(webrtc.RTPCodecTypeAudio); err != nil {
+		checkError(err)
+	}
+
 	// Set a handler for when a new remote track starts, this handler creates a gstreamer pipeline
 	// for the given codec
 	pc.OnTrack(func(track *webrtc.Track, rtpReceiver *webrtc.RTPReceiver) {
